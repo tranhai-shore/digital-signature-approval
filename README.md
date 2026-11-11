@@ -4,7 +4,7 @@
 
 DSIG is a self-contained Python implementation of a digital document approval workflow. A signer produces a detached `.sig` package that binds the document bytes to the signer identity, original filename, file size and signing time. A verifier can then check the document and every signed metadata field using only the signer's public key.
 
-The cryptographic core — modular arithmetic, prime generation, RSA key generation, CRT, SHA-256 streaming, EMSA-PKCS1-v1_5 encoding and signature verification — is implemented from the Python standard library. No third-party cryptography package is required at runtime.
+The cryptographic core — modular arithmetic, prime generation, RSA key generation, CRT, SHA-256 streaming, EMSA-PKCS1-v1_5 encoding and signature verification — is implemented with the Python standard library. Password-protected key storage and interoperability tests optionally use the `cryptography` package.
 
 ## Design goals
 
@@ -363,7 +363,7 @@ The suite contains **224 tests** covering:
 
 - modular exponentiation, Bézout coefficients, modular inverses and Miller-Rabin vectors;
 - the textbook RSA vector `p=61, q=53, e=17, d=2753, m=65 → s=588`;
-- 1024-bit functional keys and 2048-bit project keys;
+- 1024-bit functional keys and 2048-bit default keys;
 - CRT consistency, signature round-trips, tampered signatures and wrong keys;
 - NIST SHA-256 vectors and streaming with multiple chunk sizes;
 - strict padding acceptance and rejection;
