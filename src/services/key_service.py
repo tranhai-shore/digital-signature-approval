@@ -10,6 +10,7 @@ from pathlib import Path
 
 from src.crypto.encoding import b64url_decode, b64url_encode
 from src.crypto.rsa import RSAPrivateKey, RSAPublicKey, generate_keypair
+from src.models.json_support import JSONSupportError, loads_strict, read_json_file
 from src.models.signature_package import validate_fingerprint
 from src.services.file_service import atomic_write_text
 
@@ -53,14 +54,12 @@ def validate_key_name(value: str) -> str:
 def _read_json_object(path: str | Path) -> dict[str, object]:
     target = Path(path)
     try:
-        text = target.read_text(encoding="utf-8")
+        data = read_json_file(target)
     except OSError as exc:
         raise KeyFileError(f"cannot read key file: {target}") from exc
+    except JSONSupportError as exc:
+        raise KeyFileError(f"key file is not valid JSON: {exc}") from exc
 
-    try:
-        data = json.loads(text)
-    except json.JSONDecodeError as exc:
-        raise KeyFileError("key file is not valid JSON") from exc
     if not isinstance(data, dict):
         raise KeyFileError("key file must contain a JSON object")
     return data
@@ -176,11 +175,11 @@ def _decrypt_private_key(
         raise KeyFileError("wrong password or corrupted private key") from exc
 
     try:
-        key_data = json.loads(plaintext.decode("utf-8"))
+        key_data = loads_strict(plaintext)
         if not isinstance(key_data, dict):
             raise KeyFileError("decrypted key is not a JSON object")
         key = RSAPrivateKey.from_dict(key_data)
-    except (UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+    except (KeyFileError, JSONSupportError, ValueError) as exc:
         if isinstance(exc, KeyFileError):
             raise
         raise KeyFileError("decrypted key is malformed") from exc

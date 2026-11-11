@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 
+from src.models.json_support import JSONSupportError, read_json_file
 from src.models.signature_package import PackageError, SignaturePackage
 from src.services.file_service import atomic_write_text
 
@@ -25,16 +25,15 @@ def read_package(path: str | os.PathLike[str]) -> SignaturePackage:
 
     ``FileNotFoundError`` and other ``OSError`` values are allowed to propagate
     so the verification service can distinguish "missing" from "malformed".
+    Oversized, duplicate-keyed or non-finite JSON is rejected as
+    :class:`PackageError`.
     """
 
     try:
-        text = Path(path).read_text(encoding="utf-8")
-    except UnicodeDecodeError as exc:
-        raise PackageError("package is not valid UTF-8") from exc
+        data = read_json_file(path)
+    except JSONSupportError as exc:
+        raise PackageError(f"package JSON rejected: {exc}") from exc
 
-    try:
-        return SignaturePackage.from_json(text)
-    except PackageError:
-        raise
-    except (TypeError, ValueError) as exc:
-        raise PackageError("package contains invalid values") from exc
+    if not isinstance(data, dict):
+        raise PackageError("package must be a JSON object")
+    return SignaturePackage.from_dict(data)

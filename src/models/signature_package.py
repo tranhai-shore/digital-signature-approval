@@ -8,11 +8,14 @@ import unicodedata
 from dataclasses import dataclass
 
 from src.crypto.encoding import b64url_decode, b64url_encode
+from src.models.json_support import JSONSupportError, loads_strict
 from src.models.timestamp import canonicalize_timestamp
 
 PACKAGE_FORMAT = "DSIG/1"
 SIGNATURE_ALGORITHM = "RSA-PKCS1v15-SHA256"
 SHA256_HEX_LENGTH = 64
+MAX_SIGNER_CHARACTERS = 256
+MAX_ORIGINAL_NAME_CHARACTERS = 255
 
 _FINGERPRINT_RE = re.compile(r"sha256:[0-9a-f]{64}\Z")
 _SHA256_HEX_RE = re.compile(r"[0-9a-f]{64}\Z")
@@ -30,16 +33,31 @@ def _has_control_characters(value: str) -> bool:
     return any(ord(char) < 32 or ord(char) == 127 for char in value)
 
 
+def _require_valid_unicode(value: str, label: str) -> str:
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise PackageError(f"{label} must be valid Unicode text") from exc
+    return value
+
+
 def normalize_signer(value: str) -> str:
     """Normalize a signer identifier (Unicode NFC, trimmed, no controls)."""
 
     if not isinstance(value, str):
         raise PackageError("signer must be a string")
-    normalized = unicodedata.normalize("NFC", value).strip()
+    normalized = _require_valid_unicode(
+        unicodedata.normalize("NFC", value).strip(),
+        "signer",
+    )
     if not normalized:
         raise PackageError("signer must not be empty")
     if _has_control_characters(normalized):
         raise PackageError("signer must not contain control characters")
+    if len(normalized) > MAX_SIGNER_CHARACTERS:
+        raise PackageError(
+            f"signer must be at most {MAX_SIGNER_CHARACTERS} characters"
+        )
     return normalized
 
 
@@ -48,13 +66,21 @@ def normalize_original_name(value: str) -> str:
 
     if not isinstance(value, str):
         raise PackageError("original_name must be a string")
-    normalized = unicodedata.normalize("NFC", value)
+    normalized = _require_valid_unicode(
+        unicodedata.normalize("NFC", value),
+        "original_name",
+    )
     if not normalized or normalized in {".", ".."}:
         raise PackageError("original_name must not be empty or a dot component")
     if "/" in normalized or "\\" in normalized:
         raise PackageError("original_name must be a basename, not a path")
     if _has_control_characters(normalized):
         raise PackageError("original_name must not contain control characters")
+    if len(normalized) > MAX_ORIGINAL_NAME_CHARACTERS:
+        raise PackageError(
+            "original_name must be at most "
+            f"{MAX_ORIGINAL_NAME_CHARACTERS} characters"
+        )
     return normalized
 
 
@@ -118,7 +144,11 @@ class SignaturePackage:
         object.__setattr__(
             self, "original_name", normalize_original_name(self.original_name)
         )
-        object.__setattr__(self, "key_fingerprint", validate_fingerprint(self.key_fingerprint))
+        object.__setattr__(
+            self,
+            "key_fingerprint",
+            validate_fingerprint(self.key_fingerprint),
+        )
         object.__setattr__(self, "size", _validate_size(self.size))
         if not isinstance(self.signed_at, str):
             raise PackageError("signed_at must be a string")
@@ -211,9 +241,9 @@ class SignaturePackage:
         if not isinstance(text, str):
             raise PackageError("package JSON must be text")
         try:
-            data = json.loads(text)
-        except json.JSONDecodeError as exc:
-            raise PackageError("package is not valid JSON") from exc
+            data = loads_strict(text)
+        except JSONSupportError as exc:
+            raise PackageError(f"package JSON rejected: {exc}") from exc
         if not isinstance(data, dict):
             raise PackageError("package must be a JSON object")
         return cls.from_dict(data)

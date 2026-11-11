@@ -10,6 +10,11 @@ venv/
 .coverage
 htmlcov/
 
+# Packaging
+build/
+dist/
+*.spec
+
 # Project secrets and artefacts
 keys/
 *.sig

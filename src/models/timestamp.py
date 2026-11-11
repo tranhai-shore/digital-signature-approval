@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+MAX_TIMESTAMP_CHARACTERS = 64
+
 
 def utc_now_iso() -> str:
     """Return the current UTC time in canonical form, e.g. ``2026-11-11T08:30:00Z``."""
@@ -35,6 +37,10 @@ def canonicalize_timestamp(value: str) -> str:
         raise ValueError("timestamp must be a non-empty string")
 
     text = value.strip()
+    if len(text) > MAX_TIMESTAMP_CHARACTERS:
+        raise ValueError(
+            f"timestamp is too long (max {MAX_TIMESTAMP_CHARACTERS} characters)"
+        )
     try:
         parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError as exc:

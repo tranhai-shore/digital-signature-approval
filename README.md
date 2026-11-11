@@ -22,6 +22,7 @@ The cryptographic core — modular arithmetic, prime generation, RSA key generat
 - EMSA-PKCS1-v1_5 encoding/decoding with strict validation of the full encoded message.
 - Canonical TBS (*to-be-signed*) construction with a domain separator and length prefixes.
 - UTF-8 JSON `.sig` packages with schema validation and Unicode NFC normalization.
+- Strict JSON policy for packages and key files: 1 MiB size cap, duplicate-key rejection, and rejection of `NaN`/`Infinity`.
 - Detached signature verification with 14 stable reason codes.
 - Optional password-protected private keys using PBKDF2-HMAC-SHA256 and AES-256-GCM.
 - Command-line interface for key generation, signing, verification, inspection and tamper demos, with JSON output and deterministic exit codes.
@@ -47,6 +48,7 @@ digital-signature-approval/
 │   │   └── encoding.py            # int/bytes, base64url, constant-time compare
 │   ├── models/
 │   │   ├── signature_package.py   # .sig schema and metadata validation
+│   │   ├── json_support.py        # strict JSON limits, duplicates, non-finite
 │   │   ├── timestamp.py           # canonical UTC timestamps
 │   │   └── verification.py        # reason codes, messages and results
 │   └── services/
@@ -70,6 +72,7 @@ digital-signature-approval/
 │   ├── test_sign_verify_service.py
 │   ├── test_file_service.py
 │   ├── test_gui.py
+│   ├── test_hardening.py
 │   └── test_cli.py
 └── docs/
     ├── SIGNATURE_FORMAT.md        # TBS, package and key format specification
@@ -311,6 +314,17 @@ The window provides four tabs:
 
 Key generation, hashing, signing and verification run on a worker thread so the window remains responsive with large documents. Every completed operation is written to the activity log.
 
+### Optional standalone executable
+
+PyInstaller is not a project dependency, but it can bundle the Tkinter application for a machine without Python:
+
+```bash
+pip install pyinstaller
+pyinstaller --noconfirm --clean --windowed --name DSIG --paths . src/gui/__main__.py
+```
+
+The result is `dist/DSIG/DSIG.exe` on Windows. Add `--onefile` for a single executable. PyInstaller must run on the target operating system; a Windows build does not run on Linux or macOS.
+
 ## Library API
 
 ```python
@@ -368,6 +382,15 @@ DSIG provides:
 - **Atomic persistence** of keys and packages, avoiding partially written files.
 - **Restrictive private-key permissions** (`0o600`) and optional password encryption with PBKDF2-HMAC-SHA256 (200,000 iterations) and AES-256-GCM.
 
+DSIG applies the following limits to untrusted metadata:
+
+- `.sig` and key JSON files are capped at **1 MiB**; larger files are rejected before being parsed.
+- Duplicate JSON keys, `NaN`, `Infinity` and `-Infinity` are rejected.
+- JSON integers are capped at 4,096 decimal digits.
+- Signer identifiers are limited to 256 characters and filenames to 255 characters.
+- Timestamps are limited to 64 characters before canonicalization.
+- Packages and keys must be valid UTF-8; lone Unicode surrogates are rejected.
+
 DSIG does **not** provide:
 
 - A public-key infrastructure, certificate authority, revocation or trust-on-first-use policy. Public keys must be distributed and authenticated out of band.
@@ -382,7 +405,7 @@ DSIG does **not** provide:
 python -m pytest -q
 ```
 
-The suite contains **245 tests** covering:
+The suite contains **286 tests** covering:
 
 - modular exponentiation, Bézout coefficients, modular inverses and Miller-Rabin vectors;
 - the textbook RSA vector `p=61, q=53, e=17, d=2753, m=65 → s=588`;
@@ -397,6 +420,9 @@ The suite contains **245 tests** covering:
 - CLI key generation, signing, verification, inspection, fingerprinting, tamper demos, JSON output and exit codes;
 - CLI and GUI helpers for atomic writes, bit flipping, size formatting and input validation;
 - the Tkinter application shell, key-context synchronization and success/failure banners;
+- strict JSON handling: 1 MiB caps, duplicate keys, non-finite numbers, invalid UTF-8 and oversized packages;
+- metadata length limits, Unicode edge cases, empty documents and a 50 MiB streaming round-trip;
+- deterministic fuzzing of package JSON, random package bytes and mutated valid packages;
 - byte-for-byte interoperability with OpenSSL through the optional `cryptography` package.
 
 ## Compatibility

@@ -93,6 +93,23 @@ Hai biểu diễn tương đương (NFC/NFD, `+07:00`/`Z`) tạo ra cùng TBS, n
 
 Tệp được ghi bằng UTF-8, JSON 2-space indent, kết thúc bằng newline. Trường lạ bị bỏ qua khi đọc; trường thiếu hoặc sai kiểu bị từ chối.
 
+#### 3.1.1. Giới hạn đầu vào
+
+Bộ đọc package dùng chính sách JSON nghiêm ngặt:
+
+| Ràng buộc | Giá trị |
+|---|---|
+| Kích thước tệp `.sig` | ≤ 1 MiB (1.048.576 byte) |
+| Khóa JSON trùng | Bị từ chối |
+| `NaN`, `Infinity`, `-Infinity` | Bị từ chối |
+| Số nguyên JSON | ≤ 4.096 chữ số thập phân |
+| UTF-8 | Bắt buộc; surrogate đơn lẻ bị từ chối |
+| `signer` | ≤ 256 ký tự sau chuẩn hóa NFC |
+| `file.original_name` | ≤ 255 ký tự sau chuẩn hóa NFC |
+| `signed_at` | ≤ 64 ký tự trước khi chuẩn hóa |
+
+Giới hạn kích thước được kiểm tra **trước khi parse**, nên tệp rất lớn không bị nạp toàn bộ vào bộ nhớ. Các trường lạ vẫn được bỏ qua để giữ tương thích tiến hóa.
+
 ### 3.2. Ví dụ đầy đủ
 
 ```json
@@ -171,7 +188,7 @@ VerificationResult(
 | `VALID` | — | Hợp lệ |
 | `PACKAGE_NOT_FOUND` | `FileNotFoundError` | Không có tệp `.sig` |
 | `PACKAGE_READ_ERROR` | `OSError` khác | Không đọc được (thư mục, quyền, I/O) |
-| `PACKAGE_MALFORMED` | `PackageError` | JSON/UTF-8/schema sai |
+| `PACKAGE_MALFORMED` | `PackageError` | JSON/UTF-8/schema sai, khóa trùng, NaN/Infinity hoặc tệp quá lớn |
 | `UNSUPPORTED_ALGORITHM` | `UnsupportedAlgorithmError` | Thuật toán ký không hỗ trợ |
 | `KEY_MISMATCH` | — | Sai khóa công khai |
 | `SIGNER_MISMATCH` | — | Sai người ký mong đợi |
@@ -238,6 +255,7 @@ Các tham số CRT được kiểm tra nhất quán khi nạp (`dp = d mod (p-1)
 ### 6.4. Tên khóa và quyền tệp
 
 - Tên khóa khớp `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
+- Tệp khóa JSON dùng cùng chính sách nghiêm ngặt: ≤ 1 MiB, từ chối khóa trùng và `NaN`/`Infinity`.
 - `keys/<name>_private.json` → mode `0o600`.
 - `keys/<name>_public.json` → mode `0o644`.
 - Package `.sig` → mode `0o644`.
