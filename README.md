@@ -435,5 +435,7 @@ The suite contains **286 tests** covering:
 ## Documentation
 
 - [`docs/SIGNATURE_FORMAT.md`](docs/SIGNATURE_FORMAT.md) — TBS layout, `.sig` schema, key formats, verification order and reason codes.
+- [`docs/report/DSIG_Project_Report.pdf`](docs/report/DSIG_Project_Report.pdf) — project report (PDF).
+- [`docs/report/DSIG_Project_Report.docx`](docs/report/DSIG_Project_Report.docx) — editable report source.
 - [`docs/pre_project_report.md`](docs/pre_project_report.md) — background, requirements and threat analysis.
 - [`docs/KE_HOACH_TRIEN_KHAI.md`](docs/KE_HOACH_TRIEN_KHAI.md) — internal implementation plan.
