@@ -14,6 +14,7 @@ htmlcov/
 keys/
 *.sig
 docs/evidence/
+docs/references/
 
 # OS / editors
 .DS_Store

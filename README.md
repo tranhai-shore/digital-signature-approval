@@ -1,46 +1,57 @@
-# Application of Digital Signatures for the Document Approval Process
+# DSIG
 
-Đồ án môn **Introduction to Cryptography** — mô phỏng quy trình Alice ký số một tài liệu và Bob xác thực, chứng minh **message authentication**, **data integrity** và **non-repudiation**.
+**Metadata-bound document signatures with RSA-2048, SHA-256 and PKCS#1 v1.5.**
 
-## Trạng thái triển khai
+DSIG is a self-contained Python implementation of a digital document approval workflow. A signer produces a detached `.sig` package that binds the document bytes to the signer identity, original filename, file size and signing time. A verifier can then check the document and every signed metadata field using only the signer's public key.
 
-| Giai đoạn | Nội dung | Trạng thái |
-|---|---|---|
-| P0 | Cấu trúc dự án, quy ước package, test harness | ✅ Hoàn thành |
-| P1 | Crypto core: modexp, Miller-Rabin, RSA keygen, ký/verify raw, CRT | ✅ Hoàn thành |
-| P2 | SHA-256 streaming + padding EMSA-PKCS1-v1_5 + API ký/verify an toàn | ✅ Hoàn thành |
-| P3 | TBS metadata, package `.sig`, key service, mã lỗi xác thực | ✅ Hoàn thành |
-| P4 | CLI | ⏳ Tiếp theo |
-| P5 | GUI Tkinter | ⏳ |
-| P6 | Test matrix & hardening | ⏳ |
-| P7 | Báo cáo, slide, demo | ⏳ |
+The cryptographic core — modular arithmetic, prime generation, RSA key generation, CRT, SHA-256 streaming, EMSA-PKCS1-v1_5 encoding and signature verification — is implemented from the Python standard library. No third-party cryptography package is required at runtime.
 
-> ✅ **P3 đã có luồng ký/xác thực hoàn chỉnh.** `SignService` ký tài liệu và sinh package `.sig`; `VerifyService` kiểm tra toàn bộ chuỗi (package → khóa → kích thước → SHA-256 → chữ ký → TBS) và trả về **mã lỗi ổn định** cho CLI/GUI ở P4–P5.
+## Design goals
 
-## Cấu trúc
+- **Integrity** — any change to the document is detected by SHA-256.
+- **Authenticity** — the signature can only be produced with the private key.
+- **Metadata binding** — signer, filename, size and timestamp are covered by the signature, not stored as unsigned hints.
+- **Deterministic verification** — every failure maps to a stable, machine-readable reason code.
+- **Auditability** — the complete signing and verification path is implemented in readable Python.
+- **Safe file handling** — keys and packages are written atomically; private keys use restrictive permissions.
+
+## Features
+
+- RSA-2048 key generation with `e = 65537`, Miller-Rabin primality testing and CRT-accelerated signing.
+- Streaming SHA-256 hashing (1 MiB chunks) so large documents are never loaded fully into memory.
+- EMSA-PKCS1-v1_5 encoding/decoding with strict validation of the full encoded message.
+- Canonical TBS (*to-be-signed*) construction with a domain separator and length prefixes.
+- UTF-8 JSON `.sig` packages with schema validation and Unicode NFC normalization.
+- Detached signature verification with 14 stable reason codes.
+- Optional password-protected private keys using PBKDF2-HMAC-SHA256 and AES-256-GCM.
+- Command-line interface for key generation, signing, verification, inspection and tamper demos, with JSON output and deterministic exit codes.
+- Byte-for-byte interoperability tests against the `cryptography` package (optional).
+
+## Architecture
 
 ```text
 digital-signature-approval/
 ├── src/
+│   ├── cli.py                     # dsig command-line interface
 │   ├── crypto/
-│   │   ├── numtheory.py       # modexp (square-and-multiply), egcd, modinv, gcd/lcm
-│   │   ├── primes.py          # Miller-Rabin, sinh số nguyên tố
-│   │   ├── rsa.py             # keygen, raw sign/verify, CRT, fingerprint, key JSON
-│   │   ├── hashing.py         # SHA-256 streaming (1 MiB/chunk)
-│   │   ├── padding.py         # EMSA-PKCS1-v1_5 encode/decode nghiêm ngặt
-│   │   ├── signature.py       # API ký/verify tài liệu an toàn
-│   │   └── encoding.py        # int <-> bytes, base64url, so sánh hằng thời gian
+│   │   ├── numtheory.py           # modular exponentiation, egcd, modinv, gcd/lcm
+│   │   ├── primes.py              # Miller-Rabin and prime generation
+│   │   ├── rsa.py                 # key generation, raw RSA, CRT, fingerprints
+│   │   ├── hashing.py             # streaming SHA-256
+│   │   ├── padding.py             # strict EMSA-PKCS1-v1_5
+│   │   ├── signature.py           # safe document signing and verification
+│   │   └── encoding.py            # int/bytes, base64url, constant-time compare
 │   ├── models/
-│   │   ├── signature_package.py  # schema package `.sig`, chuẩn hóa metadata
-│   │   ├── timestamp.py          # timestamp UTC chuẩn (…Z)
-│   │   └── verification.py       # VerificationReason + kết quả xác thực
+│   │   ├── signature_package.py   # .sig schema and metadata validation
+│   │   ├── timestamp.py           # canonical UTC timestamps
+│   │   └── verification.py        # reason codes, messages and results
 │   └── services/
-│       ├── tbs.py             # TBS canonical (length-prefixed, domain-separated)
-│       ├── sign_service.py    # ký file / dữ liệu, sinh package
-│       ├── verify_service.py  # xác thực file / dữ liệu, ánh xạ mã lỗi
-│       ├── package_service.py # đọc/ghi `.sig` JSON
-│       ├── key_service.py     # sinh/lưu/nạp khóa, khóa riêng có mật khẩu
-│       └── file_service.py    # ghi atomic, đường dẫn `.sig` mặc định
+│       ├── tbs.py                 # canonical TBS builder
+│       ├── sign_service.py        # sign files or in-memory data
+│       ├── verify_service.py      # verify documents and classify failures
+│       ├── package_service.py     # read/write .sig JSON
+│       ├── key_service.py         # key generation and storage
+│       └── file_service.py        # atomic writes and default paths
 ├── tests/
 │   ├── test_numtheory.py
 │   ├── test_primes.py
@@ -52,184 +63,325 @@ digital-signature-approval/
 │   ├── test_tbs.py
 │   ├── test_package.py
 │   ├── test_key_service.py
-│   └── test_sign_verify_service.py
+│   ├── test_sign_verify_service.py
+│   └── test_cli.py
 └── docs/
-    ├── pre_project_report.md
-    ├── SIGNATURE_FORMAT.md       # đặc tả TBS, package `.sig`, mã lỗi
-    ├── KE_HOACH_TRIEN_KHAI.md
-    └── references/
-        ├── *.pdf                 # bài giảng, lab, chương sách
-        └── _extracted/*.txt      # text trích xuất để tra cứu
+    ├── SIGNATURE_FORMAT.md        # TBS, package and key format specification
+    ├── KE_HOACH_TRIEN_KHAI.md     # internal implementation plan
+    └── pre_project_report.md      # background and requirements analysis
 ```
 
-## Cài đặt và chạy test
+## Cryptographic design
 
-```powershell
+### Key generation
+
+- Modulus size: **2048 bits** by default; `e = 65537`.
+- Prime candidates are tested with Miller-Rabin using **40 rounds**.
+- The private exponent is computed as `d = e⁻¹ mod φ(N)`; CRT parameters `dp`, `dq` and `qinv` are derived and validated.
+- Every signature is checked against the public key immediately after generation to catch CRT faults.
+- Public-key fingerprint:
+
+```text
+SHA-256("RSA-PUB/1" || len(n) || n || len(e) || e)
+```
+
+### Signed payload (TBS)
+
+The signature does not cover the JSON text directly. It covers a canonical byte string rebuilt from the package metadata:
+
+```text
+TBS = b"DSIGv1\x00"
+   || u32(len(algorithm))      || algorithm
+   || u32(len(signer))         || signer
+   || u32(len(original_name))  || original_name
+   || u64(size)
+   || u32(len(signed_at))      || signed_at
+   || SHA-256(document)        # 32 raw bytes
+```
+
+All integers are big-endian and all strings are UTF-8. The design provides:
+
+- **Domain separation** — `DSIGv1\0` prevents a TBS from being confused with signed data from another protocol.
+- **Unambiguous parsing** — every variable-length field is length-prefixed, so `("ab", "c")` and `("a", "bc")` produce different TBS values.
+- **Canonical metadata** — signer and filename are normalized to Unicode NFC; timestamps must include an offset and are converted to UTC `YYYY-MM-DDTHH:MM:SSZ`; filenames must be basenames.
+- **Stable signing time** — timestamps are truncated to second precision before signing.
+
+### Signature encoding
+
+The TBS is hashed with SHA-256 and encoded as an EMSA-PKCS1-v1_5 `DigestInfo` structure:
+
+```text
+EM = 0x00 || 0x01 || 0xFF...FF || 0x00 || DigestInfo(SHA-256) || SHA-256(TBS)
+```
+
+Padding is decoded strictly: header, padding string, separator and DigestInfo must all match. Signatures always have the same length as the modulus — 256 bytes for RSA-2048.
+
+### Package format
+
+A `.sig` file is UTF-8 JSON:
+
+```json
+{
+  "format": "DSIG/1",
+  "algorithm": "RSA-PKCS1v15-SHA256",
+  "signer": "Alice",
+  "key_fingerprint": "sha256:…",
+  "file": {
+    "original_name": "contract.pdf",
+    "size": 1234,
+    "sha256": "…"
+  },
+  "signed_at": "2026-11-11T10:00:00Z",
+  "signature": "…base64url…"
+}
+```
+
+Packages contain no private key material. The full schema, key formats and compatibility rules are specified in [`docs/SIGNATURE_FORMAT.md`](docs/SIGNATURE_FORMAT.md).
+
+### Verification pipeline
+
+Verification runs in a fixed order so that the earliest possible cause is reported:
+
+1. Parse and validate the package.
+2. Check the expected signer, when supplied.
+3. Compare the public-key fingerprint with the package.
+4. Confirm the document exists and is readable.
+5. Compare the document size.
+6. Compute SHA-256 over the document.
+7. Rebuild the TBS and verify the RSA signature and padding.
+8. Report `VALID`.
+
+| Reason | Meaning |
+|---|---|
+| `VALID` | Signature is valid; document and metadata are unchanged. |
+| `PACKAGE_NOT_FOUND` | `.sig` file does not exist. |
+| `PACKAGE_READ_ERROR` | Package cannot be read (directory, permission, I/O error). |
+| `PACKAGE_MALFORMED` | Invalid JSON, UTF-8 or schema. |
+| `UNSUPPORTED_ALGORITHM` | Package declares an unsupported signature algorithm. |
+| `KEY_MISMATCH` | Public key does not match the package fingerprint. |
+| `SIGNER_MISMATCH` | Signer differs from the expected identity. |
+| `FILE_NOT_FOUND` | Document does not exist. |
+| `FILE_READ_ERROR` | Document cannot be read. |
+| `SIZE_MISMATCH` | Document size differs from signed metadata. |
+| `HASH_MISMATCH` | Document content changed; SHA-256 differs. |
+| `SIGNATURE_MALFORMED` | Signature has the wrong length/format or is out of range. |
+| `PADDING_INVALID` | EMSA-PKCS1-v1_5 structure is invalid. |
+| `TBS_MISMATCH` | Signature does not match the signed metadata. |
+
+## Installation
+
+Python **3.10 or newer** is required.
+
+```bash
+git clone https://github.com/tranhai-shore/digital-signature-approval.git
+cd digital-signature-approval
+python -m venv .venv
+# Windows: .venv\Scripts\activate
+# Linux/macOS: source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q
 ```
 
-Kết quả hiện tại: **206 passed**.
+For the optional interoperability tests and password-protected key support:
 
-Test bao gồm:
-
-- đối chiếu `modexp` với `pow` của Python, kiểm tra định lý Bézout, nghịch đảo modulo (bài Lab 2);
-- Miller-Rabin với số nguyên tố/composite đã biết (561, 1105, 1729, 2047…);
-- vector RSA kinh điển `p=61, q=53, e=17, d=2753, m=65 → s=588`;
-- sinh khóa 1024-bit cho test chức năng và 2048-bit cho yêu cầu dự án;
-- roundtrip ký/verify, kiểm tra CRT khớp `pow(m, d, n)`, phát hiện chữ ký bị sửa/sai khóa;
-- SHA-256 vector NIST (`""`, `"abc"`) và streaming với nhiều kích thước chunk;
-- kiểm tra cấu trúc padding, từ chối sai header/PS/separator/DigestInfo;
-- ký/verify file 1.7 MB, phát hiện flip 1 bit;
-- **TBS**: tất định, mỗi trường metadata đều làm thay đổi TBS, chống nhập nhằng nhờ length-prefix, chuẩn hóa Unicode NFC và timestamp UTC;
-- **package `.sig`**: roundtrip JSON, giữ tiếng Việt, từ chối format/algorithm/digest/fingerprint/signature sai;
-- **key service**: sinh/lưu/nạp khóa, quyền file, khóa riêng mã hóa bằng mật khẩu, phát hiện sai mật khẩu và dữ liệu bị sửa;
-- **luồng ký/xác thực**: sửa 1 bit, sửa kích thước, sửa metadata, sai khóa, sai người ký, package thiếu/hỏng/không phải UTF-8, tên tệp Unicode;
-- **cross-check với thư viện `cryptography`**: chữ ký của dự án phải giống từng byte với OpenSSL.
-
-Chạy thêm cross-check và test khóa có mật khẩu (tùy chọn):
-
-```powershell
+```bash
 pip install -r requirements-dev.txt
-python -m pytest -q
 ```
 
-## Dùng nhanh
+## Command-line interface
 
-### P2 — ký/verify ở mức byte
+Run the CLI as a module:
 
-```python
-from src.crypto.rsa import generate_keypair
-from src.crypto.signature import sign_file, verify_file
-
-key = generate_keypair(bits=2048)
-
-signature = sign_file(key, "contract.pdf")
-assert verify_file(key.public_key, "contract.pdf", signature)
-print(key.public_key.fingerprint)
+```bash
+python -m src.cli --version
+# equivalent
+python -m src --version
 ```
 
-Với dữ liệu trong bộ nhớ:
+### Generate a key pair
 
-```python
-from src.crypto.signature import sign_bytes, verify_bytes
-
-signature = sign_bytes(key, b"noi dung tai lieu")
-assert verify_bytes(key.public_key, b"noi dung tai lieu", signature)
-assert not verify_bytes(key.public_key, b"noi dung bi sua", signature)
+```bash
+python -m src.cli keygen --name alice --bits 2048
 ```
 
-### P3 — ký tài liệu kèm metadata và xác thực
+```text
+Generated RSA-2048 key 'alice'
+Fingerprint: sha256:…
+Private key: keys/alice_private.json
+Public key:  keys/alice_public.json
+Keep the private key secret; it is not encrypted.
+```
+
+Protect the private key with a password. Omitting the value prompts without echoing:
+
+```bash
+python -m src.cli keygen --name alice --password
+python -m src.cli keygen --name alice --password-file .password
+```
+
+### Sign a document
+
+```bash
+python -m src.cli sign \
+  --key keys/alice_private.json \
+  --file contract.pdf \
+  --signer "Alice"
+```
+
+The default output is `contract.pdf.sig`. Use `--out` to choose another path and `--signed-at` to override the timestamp (useful for reproducible demos and tests).
+
+### Verify a document
+
+```bash
+python -m src.cli verify \
+  --key keys/alice_public.json \
+  --file contract.pdf \
+  --sig contract.pdf.sig \
+  --signer "Alice"
+```
+
+```text
+VALID: contract.pdf
+Signer: Alice
+Signed at: 2026-11-11T10:00:00Z
+Fingerprint: sha256:…
+```
+
+For automation, add `--json`:
+
+```bash
+python -m src.cli verify --key keys/alice_public.json \
+  --file contract.pdf --sig contract.pdf.sig --json
+```
+
+### Inspect a package
+
+```bash
+python -m src.cli inspect --sig contract.pdf.sig
+```
+
+`inspect` parses and displays metadata without verifying the signature.
+
+### Print a key fingerprint
+
+```bash
+python -m src.cli fingerprint --key keys/alice_public.json
+```
+
+### Demonstrate tampering
+
+```bash
+python -m src.cli tamper \
+  --file contract.pdf \
+  --out contract-tampered.pdf \
+  --offset 120
+```
+
+The command flips one bit in a copy of the file and never overwrites the source. Verifying the modified copy produces `HASH_MISMATCH`.
+
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Command succeeded; signature is valid for `verify`. |
+| `1` | Verification failed (invalid or malformed signature). |
+| `2` | Usage, I/O, key or package error. |
+
+`--json` produces machine-readable output for all commands. Verification failures are reported in JSON with exit code `1`; operational errors are printed to stderr with exit code `2`.
+
+## Library API
 
 ```python
 from src.services.key_service import KeyService
 from src.services.sign_service import SignService
 from src.services.verify_service import VerifyService
 
-# 1. Sinh khóa (private 0o600, public 0o644).
 generated = KeyService.generate("alice", bits=2048, keys_dir="keys")
 
-# 2. Ký: tạo contract.pdf.sig bên cạnh tài liệu.
 result = SignService.sign_file(
     generated.private_key,
     "contract.pdf",
-    signer="Nguyễn Văn A",
+    signer="Alice",
 )
-print(result.package_path)                 # contract.pdf.sig
-print(result.package.key_fingerprint)
 
-# 3. Xác thực bằng khóa công khai đã chia sẻ.
 verification = VerifyService.verify_file(
     "contract.pdf",
     result.package_path,
     generated.private_key.public_key,
-    expected_signer="Nguyễn Văn A",
+    expected_signer="Alice",
 )
-print(verification.reason.value, verification.message)
+
 assert verification.valid
+print(verification.reason.value)  # VALID
 ```
 
-Nạp khóa từ đĩa và bảo vệ khóa riêng bằng mật khẩu:
+For in-memory data:
 
 ```python
-from src.services.key_service import KeyService
+from src.services.sign_service import SignService
+from src.services.verify_service import VerifyService
 
-generated = KeyService.generate("alice", password="correct horse battery staple")
-private_key = KeyService.load_private(
-    generated.private_path,
-    password="correct horse battery staple",
+package = SignService.sign_data(
+    generated.private_key,
+    b"approval amount: 1000 USD",
+    "Alice",
+    "approval.txt",
 )
-public_key = KeyService.load_public(generated.public_path)
+
+result = VerifyService.verify_data(
+    b"approval amount: 9000 USD",
+    package,
+    generated.private_key.public_key,
+)
+assert result.reason.value == "HASH_MISMATCH"
 ```
 
-> Khóa riêng có mật khẩu cần gói tùy chọn `cryptography` (PBKDF2 + AES-256-GCM). Không có mật khẩu, khóa riêng vẫn là JSON thuần và toàn bộ phần mật mã lõi chạy bằng stdlib.
+## Security properties and limits
 
-## Đặc tả package `.sig`
+DSIG provides:
 
-Chi tiết đầy đủ ở [`docs/SIGNATURE_FORMAT.md`](docs/SIGNATURE_FORMAT.md). Tóm tắt:
+- **Integrity** of document bytes and signed metadata.
+- **Message authentication** for anyone holding the signer's trusted public key.
+- **Non-repudiation** to the extent that the private key remains under the signer's control.
+- **Atomic persistence** of keys and packages, avoiding partially written files.
+- **Restrictive private-key permissions** (`0o600`) and optional password encryption with PBKDF2-HMAC-SHA256 (200,000 iterations) and AES-256-GCM.
 
-- Package là JSON UTF-8, định danh `format: "DSIG/1"`, thuật toán `RSA-PKCS1v15-SHA256`.
-- Metadata được ký (**TBS**) gồm: algorithm, signer, tên tệp gốc, kích thước, thời điểm ký UTC và SHA-256 của tài liệu.
-- TBS dùng **domain separator** `DSIGv1\0` và **length-prefix** cho mọi trường biến độ dài → không thể nhập nhằng `("ab","c")` với `("a","bc")`.
-- Chữ ký là `RSA(private_key, SHA-256(TBS))` theo EMSA-PKCS1-v1_5; ký lại metadata không làm hỏng chữ ký, nhưng sửa metadata thì `TBS_MISMATCH`.
-- Ghi atomic (temp file + `os.replace`), không để lại tệp tạm.
+DSIG does **not** provide:
 
-## Mã lỗi xác thực
+- A public-key infrastructure, certificate authority, revocation or trust-on-first-use policy. Public keys must be distributed and authenticated out of band.
+- Trusted timestamping. `signed_at` is the signer's claimed time, not a third-party attestation.
+- Protection against a compromised signer device or private key.
+- Side-channel hardening. The implementation is written for clarity and auditability, not for constant-time execution on shared hardware.
+- A replacement for a vetted production crypto library. Use established libraries and formats such as CMS or PAdES when regulatory or interoperability requirements apply.
 
-`VerifyService` trả về `VerificationResult` với `reason` ổn định (dùng cho CLI/GUI và test):
+## Testing
 
-| Mã | Ý nghĩa |
-|---|---|
-| `VALID` | Chữ ký hợp lệ, tài liệu chưa bị thay đổi. |
-| `PACKAGE_NOT_FOUND` | Không tìm thấy tệp `.sig`. |
-| `PACKAGE_READ_ERROR` | Không đọc được `.sig` (ví dụ là thư mục, lỗi quyền). |
-| `PACKAGE_MALFORMED` | JSON/UTF-8 hỏng hoặc sai schema. |
-| `UNSUPPORTED_ALGORITHM` | Package khai báo thuật toán không hỗ trợ. |
-| `KEY_MISMATCH` | Khóa công khai không khớp fingerprint trong package. |
-| `SIGNER_MISMATCH` | Người ký khác `expected_signer`. |
-| `FILE_NOT_FOUND` | Không tìm thấy tài liệu. |
-| `FILE_READ_ERROR` | Không đọc được tài liệu. |
-| `SIZE_MISMATCH` | Kích thước tài liệu khác metadata. |
-| `HASH_MISMATCH` | Nội dung tài liệu đã thay đổi (SHA-256 khác). |
-| `SIGNATURE_MALFORMED` | Chữ ký sai độ dài/định dạng hoặc ≥ modulus. |
-| `PADDING_INVALID` | Cấu trúc EMSA-PKCS1-v1_5 không hợp lệ. |
-| `TBS_MISMATCH` | Chữ ký không khớp metadata đã ký. |
+```bash
+python -m pytest -q
+```
 
-Thứ tự kiểm tra: **parse package → expected signer → fingerprint khóa → tồn tại tệp → kích thước → SHA-256 → chữ ký/padding → TBS**. Nhờ vậy lỗi được báo ở bước sớm nhất và không lộ chi tiết mật mã không cần thiết.
+The suite contains **224 tests** covering:
 
-## Đặc điểm kỹ thuật
+- modular exponentiation, Bézout coefficients, modular inverses and Miller-Rabin vectors;
+- the textbook RSA vector `p=61, q=53, e=17, d=2753, m=65 → s=588`;
+- 1024-bit functional keys and 2048-bit project keys;
+- CRT consistency, signature round-trips, tampered signatures and wrong keys;
+- NIST SHA-256 vectors and streaming with multiple chunk sizes;
+- strict padding acceptance and rejection;
+- TBS determinism, metadata binding, Unicode normalization and length-prefix ambiguity;
+- package schema validation and Unicode filenames;
+- key persistence, permissions, encrypted private keys and wrong-password handling;
+- end-to-end signing and verification for every reason code;
+- CLI key generation, signing, verification, inspection, fingerprinting, tamper demos, JSON output and exit codes;
+- byte-for-byte interoperability with OpenSSL through the optional `cryptography` package.
 
-### P2 — padding và ký
+## Compatibility
 
-- `EM = 0x00 || 0x01 || 0xFF... || 0x00 || DigestInfo(SHA-256) || digest` đúng RFC 8017 §9.2.
-- Decode kiểm tra **toàn bộ cấu trúc**, không chỉ 32 byte cuối; PS tối thiểu 8 byte.
-- Chữ ký có độ dài cố định bằng modulus (256 byte với RSA-2048), kể cả khi có byte 0 đứng đầu.
-- So sánh digest bằng `hmac.compare_digest`.
-- Sau khi ký, tự kiểm tra lại bằng khóa công khai để phát hiện lỗi CRT (fault attack).
-- Hash file theo chunk 1 MiB, không nạp cả tài liệu vào RAM.
+- Python **3.10+**
+- Core runtime: standard library only (`hashlib`, `secrets`, `hmac`, `json`, `argparse`).
+- Optional: `cryptography>=42` for password-protected private keys and interoperability tests.
 
-### P3 — metadata, khóa và package
+## Documentation
 
-- Signer và tên tệp được chuẩn hóa **Unicode NFC**; tên tệp phải là basename, từ chối `/`, `\`, `.`, `..`.
-- Timestamp bắt buộc có múi giờ và được đưa về UTC dạng `2026-11-11T10:00:00Z`.
-- `original_name` nằm trong TBS nên đổi tên trong package sẽ bị phát hiện.
-- Khóa công khai: JSON `RSA-PUB/1`; khóa riêng: JSON `RSA-PRIV/1`.
-- Khóa riêng có mật khẩu: envelope `RSA-PRIV-ENC/1`, PBKDF2-HMAC-SHA256 200.000 vòng, AES-256-GCM, AAD gắn với fingerprint.
-- Tên khóa giới hạn `[A-Za-z0-9][A-Za-z0-9._-]{0,63}` để tránh path traversal.
-- Ghi file atomic; khóa riêng `0o600`, khóa công khai và package `0o644`.
-
-## Quy ước kỹ thuật
-
-- Modulus mặc định **2048 bit**, `e = 65537`, Miller-Rabin **40 rounds**.
-- `d` được tính theo `φ(N)`, các tham số CRT `dp`, `dq`, `qinv` được kiểm tra nhất quán.
-- Khóa riêng có `repr` an toàn, không in `d`, `p`, `q`.
-- Fingerprint = `SHA-256("RSA-PUB/1" || len(n) || n || len(e) || e)`.
-- Không phụ thuộc thư viện mật mã ngoài; chỉ dùng `hashlib`/`secrets` của stdlib. `cryptography` chỉ là tùy chọn cho khóa riêng có mật khẩu và cross-check.
-
-## Tài liệu
-
-- `docs/SIGNATURE_FORMAT.md` — đặc tả TBS, package `.sig`, định dạng khóa và mã lỗi.
-- `docs/pre_project_report.md` — báo cáo tiền dự án.
-- `docs/KE_HOACH_TRIEN_KHAI.md` — kế hoạch triển khai đầy đủ (P0–P7, test matrix, báo cáo, demo).
-- `docs/references/` — PDF bài giảng, lab và chương sách tham khảo.
-- `docs/references/_extracted/` — text trích từ các PDF để tra cứu nhanh.
+- [`docs/SIGNATURE_FORMAT.md`](docs/SIGNATURE_FORMAT.md) — TBS layout, `.sig` schema, key formats, verification order and reason codes.
+- [`docs/pre_project_report.md`](docs/pre_project_report.md) — background, requirements and threat analysis.
+- [`docs/KE_HOACH_TRIEN_KHAI.md`](docs/KE_HOACH_TRIEN_KHAI.md) — internal implementation plan.
