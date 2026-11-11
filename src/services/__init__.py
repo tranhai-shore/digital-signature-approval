@@ -10,6 +10,7 @@ from src.services.file_service import (
     atomic_write_bytes,
     atomic_write_text,
     default_signature_path,
+    flip_bit,
 )
 from src.services.key_service import (
     ENCRYPTED_PRIVATE_FORMAT,
@@ -40,6 +41,7 @@ __all__ = [
     "atomic_write_text",
     "build_tbs",
     "default_signature_path",
+    "flip_bit",
     "read_package",
     "validate_key_name",
     "write_package",

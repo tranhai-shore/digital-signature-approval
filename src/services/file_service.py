@@ -55,3 +55,40 @@ def default_signature_path(document_path: str | os.PathLike[str]) -> Path:
 
     document = Path(document_path)
     return document.with_name(document.name + ".sig")
+
+
+def flip_bit(
+    source: str | os.PathLike[str],
+    output: str | os.PathLike[str],
+    *,
+    offset: int = 0,
+    bit: int = 0,
+) -> Path:
+    """Copy ``source`` to ``output`` with one bit flipped.
+
+    The source file is never modified.  The output is written atomically with
+    the source file's permission bits.
+    """
+
+    source_path = Path(source)
+    output_path = Path(output)
+
+    if source_path.resolve() == output_path.resolve():
+        raise ValueError(
+            "refusing to overwrite the input file; choose another output path"
+        )
+
+    data = bytearray(source_path.read_bytes())
+    if not data:
+        raise ValueError(f"file is empty: {source_path}")
+    if isinstance(offset, bool) or not isinstance(offset, int):
+        raise ValueError("offset must be an integer")
+    if not 0 <= offset < len(data):
+        raise ValueError(f"offset must be between 0 and {len(data) - 1}")
+    if isinstance(bit, bool) or not isinstance(bit, int) or not 0 <= bit <= 7:
+        raise ValueError("bit must be between 0 and 7")
+
+    data[offset] ^= 1 << bit
+    mode = source_path.stat().st_mode & 0o777
+    return atomic_write_bytes(output_path, bytes(data), mode=mode)
+

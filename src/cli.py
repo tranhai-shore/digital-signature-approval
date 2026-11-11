@@ -20,7 +20,7 @@ from typing import Any, Sequence
 
 from src import __version__
 from src.models.signature_package import PackageError
-from src.services.file_service import atomic_write_bytes
+from src.services.file_service import flip_bit
 from src.services.key_service import KeyFileError, KeyService, validate_key_name
 from src.services.package_service import read_package
 from src.services.sign_service import SignService
@@ -240,23 +240,12 @@ def _cmd_fingerprint(args: argparse.Namespace) -> int:
 
 def _cmd_tamper(args: argparse.Namespace) -> int:
     source = Path(args.file)
-    output = Path(args.out)
-    if source.resolve() == output.resolve():
-        raise ValueError(
-            "refusing to overwrite the input file; choose another --out path"
-        )
-
-    data = bytearray(source.read_bytes())
-    if not data:
-        raise ValueError(f"file is empty: {source}")
-    if not 0 <= args.offset < len(data):
-        raise ValueError(f"offset must be between 0 and {len(data) - 1}")
-    if not 0 <= args.bit <= 7:
-        raise ValueError("bit must be between 0 and 7")
-
-    data[args.offset] ^= 1 << args.bit
-    mode = source.stat().st_mode & 0o777
-    atomic_write_bytes(output, bytes(data), mode=mode)
+    output = flip_bit(
+        source,
+        args.out,
+        offset=args.offset,
+        bit=args.bit,
+    )
 
     payload = {
         "ok": True,

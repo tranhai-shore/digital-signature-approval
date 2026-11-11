@@ -25,6 +25,7 @@ The cryptographic core — modular arithmetic, prime generation, RSA key generat
 - Detached signature verification with 14 stable reason codes.
 - Optional password-protected private keys using PBKDF2-HMAC-SHA256 and AES-256-GCM.
 - Command-line interface for key generation, signing, verification, inspection and tamper demos, with JSON output and deterministic exit codes.
+- Tkinter desktop application with key management, signing, verification banners and a tamper-demo workflow.
 - Byte-for-byte interoperability tests against the `cryptography` package (optional).
 
 ## Architecture
@@ -33,6 +34,9 @@ The cryptographic core — modular arithmetic, prime generation, RSA key generat
 digital-signature-approval/
 ├── src/
 │   ├── cli.py                     # dsig command-line interface
+│   ├── gui/
+│   │   ├── app.py                 # Tkinter tabs, background tasks, result banners
+│   │   └── support.py             # display formatting and input validation
 │   ├── crypto/
 │   │   ├── numtheory.py           # modular exponentiation, egcd, modinv, gcd/lcm
 │   │   ├── primes.py              # Miller-Rabin and prime generation
@@ -64,6 +68,8 @@ digital-signature-approval/
 │   ├── test_package.py
 │   ├── test_key_service.py
 │   ├── test_sign_verify_service.py
+│   ├── test_file_service.py
+│   ├── test_gui.py
 │   └── test_cli.py
 └── docs/
     ├── SIGNATURE_FORMAT.md        # TBS, package and key format specification
@@ -288,6 +294,23 @@ The command flips one bit in a copy of the file and never overwrites the source.
 
 `--json` produces machine-readable output for all commands. Verification failures are reported in JSON with exit code `1`; operational errors are printed to stderr with exit code `2`.
 
+## Desktop application
+
+Launch the Tkinter interface with:
+
+```bash
+python -m src.gui
+```
+
+The window provides four tabs:
+
+- **Keys** — generate RSA key pairs, load existing public/private keys, copy the fingerprint, export keys and send the selected keys to the signing or verification tab.
+- **Sign** — choose a private key and document, compute the SHA-256 preview, enter the signer identity, sign, and write a `.sig` package.
+- **Verify** — select a public key, document and package; optional expected signer; a green/red banner shows the result with the reason code and signed metadata.
+- **Tamper demo** — create a copy with one flipped bit, then verify it to observe `HASH_MISMATCH`.
+
+Key generation, hashing, signing and verification run on a worker thread so the window remains responsive with large documents. Every completed operation is written to the activity log.
+
 ## Library API
 
 ```python
@@ -359,7 +382,7 @@ DSIG does **not** provide:
 python -m pytest -q
 ```
 
-The suite contains **224 tests** covering:
+The suite contains **245 tests** covering:
 
 - modular exponentiation, Bézout coefficients, modular inverses and Miller-Rabin vectors;
 - the textbook RSA vector `p=61, q=53, e=17, d=2753, m=65 → s=588`;
@@ -372,12 +395,15 @@ The suite contains **224 tests** covering:
 - key persistence, permissions, encrypted private keys and wrong-password handling;
 - end-to-end signing and verification for every reason code;
 - CLI key generation, signing, verification, inspection, fingerprinting, tamper demos, JSON output and exit codes;
+- CLI and GUI helpers for atomic writes, bit flipping, size formatting and input validation;
+- the Tkinter application shell, key-context synchronization and success/failure banners;
 - byte-for-byte interoperability with OpenSSL through the optional `cryptography` package.
 
 ## Compatibility
 
 - Python **3.10+**
 - Core runtime: standard library only (`hashlib`, `secrets`, `hmac`, `json`, `argparse`).
+- Desktop UI: Tkinter, bundled with CPython on Windows and macOS; on Linux install `python3-tk`.
 - Optional: `cryptography>=42` for password-protected private keys and interoperability tests.
 
 ## Documentation
