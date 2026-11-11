@@ -1,0 +1,132 @@
+ICT Course: Introduction to Cryptography
+Nguyen Minh Huong
+ICT Department, USTH
+December 10, 2024
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 1/12
+Outline
+Session 3: Introduction to Cryptography - Symmetric
+Cryptography
+1 Symmetric ciphers
+Stream ciphers
+A5/1 cipher
+RC4 - Keystream generation
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 2/12
+Symmetric ciphers
+Symmetric ciphers
+Stream cipher vs. Block cipher
+? cipher
+x1 x2... xb y1 y2... yb
+1 1
+k
+? cipher
+x1
+x2
+.
+.
+.
+ xb
+y1
+y2
+.
+.
+.
+yb
+b b
+k
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 3/12
+Symmetric ciphers
+Stream Cipher-How it works
+A key𝐾 of𝑛 bits is stretched into a long keystream S
+𝑆𝑡𝑟𝑒𝑎𝑚𝐶𝑖𝑝ℎ𝑒𝑟 „𝐾” =𝑆
+Stream cipher Encryption and Decryption
+𝑥𝑖 𝑦 𝑖 𝑠 𝑖2f 0  1g: individual bits of plaintext, ciphertext and keystream
+Encryption: 𝑦𝑖 =𝑥𝑖‚𝑠𝑖„𝑚𝑜𝑑 2”
+Decryption: 𝑥𝑖 =𝑦𝑖‚𝑠𝑖„𝑚𝑜𝑑 2”
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 4/12
+Symmetric ciphers Stream ciphers
+Stream ciphers
+Modulo 2 addition is equivalent to XOR operation
+Plaintext𝑃, Ciphertext𝐶
+𝐶 =𝑃 𝑆
+𝑃 =𝐶 𝑆
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 5/12
+Symmetric ciphers Stream ciphers
+A5/1 cipher
+designed for hardware, used in GSM
+Key of 64 bits initially ﬁlls in 3 Linear Feedback Shift Registers
+(LFSRs):
+X 19 bits
+Y 22 bits
+Z 23 bits
+How to obtain every single keystream bit?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 6/12
+Symmetric ciphers Stream ciphers
+A5/1 - Keystream generator
+X x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 
+	
+Å	
+	
+Y y0 y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21   	Å 
+	
+						Å	
+	
+	
+Z z0 z1 z2 z3 z4 z5 z6 z7 z8 z9 z10 z11 z12 z13 z14 z15 z16 z17 z18 z19 z20 z21 z22 
+	
+						Å	
+Keystream	bits	
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 7/12
+Symmetric ciphers Stream ciphers
+A5/1 - Keystream generator
+LFSR steps:
+X steps then:
+𝑥𝑖 =𝑥𝑖 1
+𝑥0 =𝑥13 𝑥16 𝑥17 𝑥18
+Y steps then: ?
+Z steps then: ?
+A single keystream bit: s = ?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 8/12
+Symmetric ciphers Stream ciphers
+A5/1 - Keystream generation
+When they step?
+Majorityvotefunction: 𝑚 =𝑚𝑎𝑗„𝑥 𝑦 𝑧 ”,𝑚 = 0whenmajorityof(x,y,z)
+is 0, otherwise𝑚 = 1
+In A5/1,𝑚 =𝑚𝑎𝑗„𝑥8 𝑦 10 𝑧 10”
+if𝑥8 =𝑚, then X steps
+if𝑦10 =𝑚, then Y steps
+if𝑧10 =𝑚, then Z steps
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 9/12
+Symmetric ciphers Stream ciphers
+RC4 algorithm
+Designed for software, e.g, SSL, WEP...
+Key: N bytes,1  𝑁  256
+Lookup table: a 256-byte array S
+Initialized from the key to the identify permutation: Key-scheduling
+Algorithm (KSA)
+can be one of all 256 possible permutations of 256 bytes
+From the lookup table, a keystream byte is generated at each step:
+Pseudo-random generation algorithm (PRGA)
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 10/12
+Symmetric ciphers Stream ciphers
+RC4 - Keystream generation
+KSA pseudo code:
+1: for𝑖 = 1 to 255 do
+2: 𝑆»𝑖… =𝑖
+𝐾»𝑖… =𝑘𝑒𝑦»𝑖𝑚𝑜𝑑 𝑁…
+3: end for
+j=0
+4: for𝑖 = 0 to 255 do
+5: 𝑗 =„𝑗‚𝑆»𝑖…‚ 𝐾»𝑖…” 𝑚𝑜𝑑 256
+Swap(S[i], S[j])
+6: end for
+i=j=0
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 11/12
+Symmetric ciphers Stream ciphers
+RC4 - Keystream generation
+PRGA pseudo code:
+𝑖 =„𝑖‚ 1”𝑚𝑜𝑑 256
+𝑗 =„𝑗‚𝑆»𝑖…” 𝑚𝑜𝑑 256
+𝑆𝑤𝑎𝑝„𝑆»𝑖… 𝑆»𝑗…”
+𝑡 =„𝑆»𝑖…‚ 𝑆»𝑗…” 𝑚𝑜𝑑 256
+𝐾𝑒𝑦𝑠𝑡𝑟𝑒𝑎𝑚𝐵𝑦𝑡𝑒 =𝑆»𝑡…
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 10, 2024 12/12

@@ -1,0 +1,34 @@
+Labwork 1 - Introduction to cryptography
+Lecturer: Nguyen Minh Huong, ICT Dept, USTH
+January 12, 2026
+Write a program in Matlab, C++ or python to solve below exercises.
+Exercise 1
+Given two numbers: a = 123, b = 543, compute:
+1. The binary form of a
+2. aXORb in binary form and in decimal form
+Exercise 2
+Given a set of numbers
+A = {105, 110, 116, 114, 111, 50, 99, 114, 121, 112, 116, 111, 123, 119, 51,
+108, 99, 48, 109, 51, 95, 116, 48, 95, 106, 48, 117, 114, 110, 51, 121, 125}
+ﬁnd the message hidden behind it. Knowing that each number in the set is the ascii code
+of a letter in the hidden message.
+Exercise 3
+Given a set of numbers
+B = {99, 100, 126, 120, 101, 56, 105, 120, 115, 122, 126, 101, 113, 59, 121,
+126, 57, 122, 85, 58, 100, 85, 96, 58, 127, 120, 100, 57, 115, 119}
+ﬁnd the message hidden behind it. Clues are as below:
+1. each number in the set is a xor of a hidden number and the numberk = 10 (decimal)
+2. each hidden number is an ascii code of a letter in the message.
+1
+Exercise 4
+Based on the provided description of the A5/1 cipher, implement the A5/1 Key generation
+algorithm. List n the keystream bits, suppose that the values of registers are provided
+X0, Y0, Z0
+Test the program with following register values in decimal:
+X = (x0, x1, ..., x18) = (513365)10
+Y = (y0, y1, ..., y21) = (3355443)10
+Z = (z0, z1, ..., z22) = (7401712)10
+n = 10
+Note
+Documents are provided in assignments on Google Classroom ””.
+2

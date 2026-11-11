@@ -1,0 +1,138 @@
+7.4 Encryption and Decryption: Fast Exponentiation 179
+(xΦ(n))t=1+u·q,
+whereuis some integer. We multiply this equation byx:
+x·(xΦ(n))t=x+x·u·q
+=x+(r·p)·u·q
+=x+r·u·(p·q)
+=x+r·u·n
+x·(xΦ(n))t≡xmodn. (7.6)
+Inserting Eq. (7.6) into Eq. (7.4) yields the desired result:
+dkpr=(xΦ(n))t·x≡xmodn.
+⊓⊔
+If this proof seems somewhat lengthy, please remember that the correctness of
+RSA is simply assured by Step 5 of the RSA key generation phase. The proof be-
+comes simpler by using the Chinese Remainder Theorem which we have not intro-
+duced.
+7.4 Encryption and Decryption: Fast Exponentiation
+Unlike symmetric algorithms such as AES, DES or stream ciphers, public-key al-
+gorithms are based on arithmetic with very long numbers. Unless we pay close
+attention to how to realize the necessary computations, we can easily end up with
+schemes that are too slow for practical use. If we look at RSA encryption and de-
+cryption in Eqs. (7.1) and (7.2), we see that both are based on modular exponentia-
+tion. We restate both operations here for convenience:
+y=ekpub(x)≡xemodn(encryption)
+x=dkpr(y)≡ydmodn(decryption)
+A straightforward way of exponentiation looks like this:
+xSQ −→x2MU L−−−→x3MU L−−−→x4MU L−−−→x5···
+whereSQdenotes squaring andMU Lmultiplication. Unfortunately, the exponents
+eanddare in general very large numbers. The exponents are typically chosen in the
+range of 1024–3072 bit or even larger. (The public exponenteis sometimes chosen
+to be a small value, butdis always very long.) Straightforward exponentiation as
+shown above would thus require around 21024or more multiplications. Since the
+number of atoms in the visible universe is estimated to be around 2 300,c o m p u t -
+ing 21024multiplications to set up one secure session for our Web browser is not
+180 7 The RSA Cryptosystem
+too tempting. The central question is whether there are considerably faster meth-
+ods for exponentiation available. The answer is, luckily, yes. Otherwise we could
+forget about RSA and pretty much all other public-key cryptosystems in use today,
+since they all rely on exponentiation. One such method is the square-and-multiply
+algorithm. We ﬁrst show a few illustrative examples with small numbers before pre-
+senting the actual algorithm.
+Example 7.2.Let’s look at how many multiplications are required to compute the
+simple exponentiationx8.W i t ht h es t r a i g h t f o r w a r dm e t h o d :
+xSQ −→x2MU L−−−→x3MU L−−−→x4MU L−−−→x5MU L−−−→x6MU L−−−→x7MU L−−−→x8
+we need seven multiplications and squarings. Alternatively, we can do something
+faster:
+xSQ −→x2SQ −→x4SQ −→x8
+which requires only three squarings that are roughly as complex as a multiplication.
+⋄
+This fast method works ﬁne but is restricted to exponents that are powers of 2,
+i.e., valueseanddof the form 2i.N o wt h eq u e s t i o ni s ,w h e t h e rw ec a ne x t e n dt h e
+method to arbitrary exponents? Let us look at another example:
+Example 7.3.This time we have the more general exponent 26, i.e., we want to
+computex26.A g a i n ,t h en a¨ıve method would require 25 multiplications. A faster
+way is as follows:
+xSQ −→x2MU L−−−→x3SQ −→x6SQ −→x12MU L−−−→x13SQ −→x26.
+This approach takes a total of six operations, two multiplications and four squarings.
+⋄
+Looking at the last example, we see that we can achieve the desired result by
+performing two basic operations:
+1.squaringthe current result,
+2.multiplyingthe current result by the base elementx.
+In the example above we computed the sequence SQ,MU L,SQ,SQ,MU L,SQ.
+However, we do not know the sequence in which the squarings and multiplications
+have to be performed for other exponents. One solution is thesquare-and-multiply
+algorithm. It provides a systematic way for ﬁnding the sequence in which we have
+to perform squarings and multiplications byxfor computingxH.R o u g h l ys p e a k i n g ,
+the algorithm works as follows:
+The algorithm is based on scanning the bit of the exponent from the left (the
+most signiﬁcant bit) to the right (the least signiﬁcant bit). In every iteration, i.e.,
+for every exponent bit, the current result is squared. If and only if the currently
+7.4 Encryption and Decryption: Fast Exponentiation 181
+scanned exponent bit has the value 1, a multiplication of the current result by
+xis executed following the squaring.
+This seems like a simple if somewhat odd rule. For better understanding, let’s
+revisit the example from above. This time, let’s pay close attention to the exponent
+bits.
+Example 7.4.We again consider the exponentiationx26.F o rt h es q u a r e - a n d - m u l t i p l y
+algorithm, the binary representation of the exponent is crucial:
+x26=x110102=x(h4h3h2h1h0)2.
+The algorithm scans the exponent bits, starting on the left withh4and ending with
+the rightmost bith0.
+Step
+#0x=x12 inital setting, bit processed:h4=1
+#1a(x1)2=x2=x102 SQ, bit processed:h3
+#1bx2·x=x3=x102x12=x112 MUL, sinceh3=1
+#2a(x3)2=x6=(x112)2=x1102 SQ, bit processed:h2
+#2b no MUL, sinceh2=0
+#3a(x6)2=x12=(x1102)2=x11002 SQ, bit processed:h1
+#3bx12·x=x13=x11002x12=x11012 MUL, sinceh1=1
+#4a(x13)2=x26=(x11012)2=x110102 SQ, bit processed:h0
+#4b no MUL, sinceh0=0
+To understand the algorithm it is helpful to closely observe how the binary rep-
+resentation of the exponent evolves. We see that the ﬁrst basic operation, squaring,
+results in a left shift of the exponent, with a 0 put in the rightmost position. The other
+basic operation, multiplication byx, results in ﬁlling a 1 into the rightmost position
+of the exponent. Compare how the highlighted exponents change from iteration to
+iteration.
+⋄
+Here is the pseudo code for the square-and-multiply algorithm:
+182 7 The RSA Cryptosystem
+Square-and-Multiply for Modular Exponentiation
+Input:
+base elementx
+exponentH=∑t i=0hi2iwithhi∈0,1a n dht=1
+and modulusn
+Output:xHmodn
+Initialization:r=x
+Algorithm:
+1F O Ri=t−1 DOWNTO 0
+1.1 r=r2modn
+IFhi=1
+1.2 r=r·xmodn
+2R E T U R N (r)
+The modulo reduction is applied after each multiplication and squaring operation
+in order to keep the intermediate results small. It is helpful to compare this pseudo
+code with the verbal description of the algorithm above.
+We determine now the complexity of the square-and-multiply algorithm for an
+exponentHwith a bit length oft+1, i.e.,⌈log2H⌉=t+1. The number of squarings
+is independent of the actual value ofH,b u tt h en u m b e ro fm u l t i p l i c a t i o n si se q u a l
+to the Hamming weight, i.e., the number of ones in its binary representation. Thus,
+we provide here the average number of multiplication, denoted byMU L:
+#SQ=t
+#MU L=0.5t
+Because the exponents used in cryptography have often good random properties,
+assuming that half of their bits have the value one is often a valid approximation.
+Example 7.5.How many operations are required on average for an exponentiation
+with a 1024-bit exponent?
+Straightforward exponentiation takes 21024≈10300multiplications. That is com-
+pletely impossible, no matter what computer resources we might have at hand. How-
+ever, the square-and-multiply algorithm requires only
+1.5·1024=1536
+squarings and multiplications on average. This is an impressive example for the
+difference of an algorithm with linear complexity (straightforward exponentiation)
+and logarithmic complexity (square-and-multiply algorithm). Remember, though,
+that each of the 1536 individual squarings and multiplications involves 1024-bit
+numbers. That means the number of integer operations on a CPU is much higher
+than 1536, but certainly doable on modern computers.
+⋄

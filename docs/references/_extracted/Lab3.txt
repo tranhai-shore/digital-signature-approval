@@ -1,0 +1,23 @@
+Labwork 3 - Introduction to cryptography
+Lecturer: Nguyen Minh Huong, ICT Dept, USTH
+December 19, 2024
+Write a program in Matlab, C++ or python to solve below exercises.
+Exercise 1
+Given a message ”ﬂow” (in ascii code), ﬁnd the corresponding integer number representing
+this message in Python.
+Hint: how to convert a string to int in python?
+Exercise 2
+Given an integer number 14445 , ﬁnd the corresponding message (a string) in ascii code
+that this integer represents in Python.
+Hint: how to convert a string to int in python?
+Exercise 3
+Based on the provided description of RSA cryptosystem, implement RSA encryption and
+decryption process. System parameters p, q, e or d are given. Deﬁne keypair, ciphertext
+C if plaintext M is given, and reversely.
+Test the program with following parameters:
+1. p = 251, q = 191, e = 65537, M = 26729
+2. p = 233, q = 151, d = 9473, C = 29600
+Exercise 4
+Find the plaintext string in ascii code, given that the ciphertext represented by an integer
+412589464. The RSA parameters are set up as below: p = 81401, q = 27109, e = 65537
+1

@@ -1,0 +1,116 @@
+11.3 Overview of Hash Algorithms 305
+Table 11.2The MD4 family of hash functions
+Algorithm Output Input No. of Collisions
+[bit] [bit] rounds found
+MD5 128 512 64 yes
+SHA-1 160 512 80 not yet
+SHA-2
+SHA-224224 512 64 no
+SHA-256256 512 64 no
+SHA-384384 1024 80 no
+SHA-512512 1024 80 no
+preimage and second preimage resistance are required. For such applications, MD5
+is still sufﬁcient.
+11.3.2 Hash Functions from Block Ciphers
+Hash functions can also be constructed using block cipher chaining techniques. As
+in the case of dedicated hash functions like SHA-1, we divide the message xinto
+blocksxiof a ﬁxed size. Figure 11.6 shows a construction of such a hash function:
+The message chunksxiare encrypted with a block ciphereof block sizeb.A sm-bit
+key input to the cipher, we use a mappinggfrom the previous outputHi−1,w h i c h
+is ab-to-m-bit mapping. In the case ofb=m,w h i c hi s ,f o ri n s t a n c e ,g i v e ni fA E S
+with a 128-bit key is being used, the functiongcan be the identity mapping. After
+the encryption of the message blockxi,w eX O Rt h er e s u l tt ot h eo r i g i n a lm e s s a g e
+block. The last output value computed is the hash of the whole messagex1,x2,...,xn,
+i.e.,Hn=h(x).
+  
+           
+ 
+   
+ 
+  
+Fig. 11.6The Matyas–Meyer–Oseas hash function construction from block ciphers
+The function can be expressed as:
+Hi=eg(Hi−1)(xi)⊕xi
+This construction, which is named after its inventors, is called the Matyas–Meyer–
+Oseas hash function.
+306 11 Hash Functions
+There exist several other variants of block cipher based realizations of hash func-
+tions. Two popular ones are shown in Figure 11.7.
+           
+  
+ 
+   
+ 
+  
+            
+ 
+ 
+ 
+  
+Fig. 11.7Davies–Meyer (left) and Miyaguchi–Preneel hash function constructions from block
+ciphers
+The expressions for the two hash functions are:
+Hi=Hi−1⊕exi(Hi−1) (Davies–Meyer)
+Hi=Hi−1⊕xi⊕eg(Hi−1)(xi) (Miyaguchi–Preneel)
+All three hash functions need to have initial values assigned to H0.T h e s ec a n
+be public values, e.g., the all-zero vector. All schemes have in common that the bit
+size of the hash output is equal to the block width of the cipher used. In situations
+where only preimage and second preimage resistance is required, block ciphers like
+AES with 128-bit block width can be used, because they provide a security level of
+128 bit against those attacks. For application which require collision resistance, the
+128-bit length provided by most modern block ciphers is not sufﬁcient. The birthday
+attack reduces the security level to mere 64 bit, which is a computational complexity
+that is within reach of PC clusters and certainly is doable for attackers with large
+budgets.
+One solution to this problem is to use Rijndael with a block width of 192 or
+256 bit. These bit lengths provide a security level of 96 and 128 bit, respectively,
+against birthday attacks, which is sufﬁcient for most applications. We recall from
+Section 4.1 that Rijndael is the cipher that became AES but allows block sizes of
+128, 192 and 256 bit.
+Another way of obtaining larger message digests is to use constructions which
+are composed of several instances of a block cipher and which yield twice the width
+of the block lengthb.F i g u r e1 1 . 8s h o w ss u c hac o n s t r u c t i o nf o rt h ec a s et h a ta
+ciphereis being employed whose key length is twice the block length. This is in
+particular the case for AES with a 256-bit key. The message digest output are the
+2bbit(Hn,L||Hn,R).I fA E Si sb e i n gu s e d ,t h i so u t p u ti s2b=256 bit long, which
+provides a high level of security against collision attacks. As can be seen from the
+ﬁgure, the previous output of the left cipherHi−1,Lis fed back as input to both block
+11.4 The Secure Hash Algorithm SHA-1 307
+ciphers. The concatenation of the previous output of the right cipher, Hi−1,R,w i t h
+the next message blockxi,f o r m st h ek e yf o rb o t hc i p h e r s .F o rs e c u r i t yr e a s o n sa
+constantchas to be XORed to the input of the right block cipher. ccan have any
+value other than the all-zero vector. As in the other three constructions described
+above, initial values have to be assigned to the ﬁrst hash values(H0,LandH0,R).
+ 
+ 
+ 
+    
+ 
+ 
+ 
+    
+ 
+  
+            
+Fig. 11.8Hirose construction for a hash function with twice the block width
+We introduce here the Hirose construction for the case that the key length be
+twice the block width. There are many other ciphers that satisfy this condition in
+addition to AES, e.g., the block ciphers Blowﬁsh, Mars, RC6 and Serpent. If a hash
+function for resource-constrained applications is needed, the lightweight block ci-
+pher PRESENT (cf. Section 3.7) allows an extremely compact hardware implemen-
+tation. With a key size of 128-bit and a block size of 64 bit, the construction com-
+putes a 128-bit hash output. This message digest size resists preimage and second
+preimage attacks, but offers only marginal security against birthday attacks.
+11.4 The Secure Hash Algorithm SHA-1
+The Secure Hash Algorithm (SHA-1) is the most widely used message digest func-
+tion of the MD4 family. Even though new attacks have been proposed against the
+algorithm, it is very instructive to look at its details because the stronger versions
+in the SHA-2 family show a very similar internal structure. SHA-1 is based on a
+Merkle–Damg˚ard construction, as can be seen in Figure 11.9.
+An interesting interpretation of the SHA-1 algorithm is that the compression
+function works like a block cipher, where the input is the previous hash valueHi−1
+and the key is formed by the message block xi.A sw ew i l ls e eb e l o w ,t h ea c t u a l
+rounds of SHA-1 are in fact quite similar to a Feistel block cipher.
+SHA-1 produces a 160-bit output of a message with a maximum length of 264bit.
+Before the hash computation, the algorithm has to preprocess the message. During
+the actual computation, the compression function processes the message in 512-bit

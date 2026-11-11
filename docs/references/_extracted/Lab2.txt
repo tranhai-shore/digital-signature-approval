@@ -1,0 +1,21 @@
+Labwork 2 - Introduction to cryptography
+Lecturer: Nguyen Minh Huong, ICT Dept, USTH
+December 12, 2024
+Write a program in Matlab, C++ or python to solve below exercises.
+Exercise 1
+Given two numbers: a = 52698, b = 61430, compute great common divisor of a and b.
+Exercise 2
+Given a set of numbers
+A = {290345, 218585, 143231, 164172, 155768, 423151, 239707, 153544, 287390, 480837}
+ﬁnd all pairs of number that are relatively prime to each other.
+Exercise 3
+Based on the provided description of the square- and-multiply algorithm, calculate expo-
+nentiation:
+xe mod m
+Compute:
+85625 mod 7
+Show the manual computation using the algorithm and compare it to returned results
+from your program.
+Exercise 4
+Find multiplicative inverse of x = 65537 in the modulo N = 35256.
+1

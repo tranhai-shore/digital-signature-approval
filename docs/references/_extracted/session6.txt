@@ -1,0 +1,112 @@
+ICT Course: Introduction to Cryptography
+Nguyen Minh Huong
+ICT Department, USTH
+December 16, 2024
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 1/16
+Outline
+Session 6: Asymmetric Cryptography - RSA Cryptosystem
+and Diﬃe-Hellman Key Exchange
+1 RSA Cryptosystem
+Generating RSA public and private keypair
+Encryption-Decryption
+Proof of the correctness
+Repeated squaring
+Speed up RSA
+Cryptanalysis
+2 Diﬃe-Hellman Key exchange
+3 Application of Public Key cryptography
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 2/16
+RSA Cryptosystem
+Overview of RSA
+be made practical by Rivest, Shamir and Aldeman
+the most widely used asymmetric cryptosystem
+Applications: Transport of (symmetric) keys and Digital Signature
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 3/16
+RSA Cryptosystem
+RSA Key Generation
+Choose 2 large prime numbers𝑝 𝑞 : 𝑁 = 𝑝 𝑞
+Choose𝑒 relative prime to„𝑝  1”„𝑞  1”
+Find𝑑:
+𝑒𝑑 = 1𝑚𝑜𝑑„𝑝  1”„𝑞  1” ()𝑒 1𝑚𝑜𝑑„𝑝  1”„𝑞  1” =𝑑
+RSA key pair consists of:
+Public key:„𝑁 𝑒”
+Private key:𝑑
+where N: modulus, e: encryption exponent, d: decryption exponent
+N has 1024 bits or 2048 bits or larger
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 4/16
+RSA Cryptosystem
+Encryption - Decryption
+Encryption: 𝐶 𝑀 𝑒„𝑚𝑜𝑑𝑁”
+Decryption: 𝑀 𝐶 𝑑„𝑚𝑜𝑑𝑁”
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 5/16
+
+RSA Cryptosystem
+Proof of correctness
+Euler’s phi function reminds:
+𝜙„𝑚” is the number of positive integers less than𝑚 that are relatively
+prime to𝑚
+For any prime number𝑝: 𝜙„𝑝” =„𝑝  1”
+If𝑝,𝑞 are prime:𝜙„𝑝 𝑞” =„𝑝  1”„𝑞  1”
+Euler’s Theorem
+If𝑥 is relative prime to𝑛 then𝑥 𝜙„𝑛”  1𝑚𝑜𝑑𝑛
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 6/16
+RSA Cryptosystem
+Proof of correctness
+Assume that M is relatively prime to N, proof the correctness of RSA?
+If M is not prime to N, proof of the correctness of RSA?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 7/16
+RSA Cryptosystem
+Textbook RSA example
+𝑝 = 11,𝑞 = 3, choose𝑒 = 3
+Key pairs?
+Describe the encryption and decryption using RSA if Bob want to send a
+plaintext𝑀 = 15to Alice?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 8/16
+RSA Cryptosystem
+Example:„𝑁 𝑒” =„33  23”,𝑀 = 5, Calculate𝐶
+Problem?
+Repeated Squaring method
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 9/16
+RSA Cryptosystem
+Using same exponent𝑒 for all users and diﬀerent𝑝 𝑞 are chosen for each
+key pair
+Common used encryption exponent:
+𝑒 = 3: requires𝑀 ¡ 𝑁1 3 to avoidcube root attack
+𝑒 = 216‚ 1
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 10/16
+RSA Cryptosystem
+Cryptanalysis
+Protocol attack
+Mathematical attack
+Side-channel attack
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 11/16
+Diﬃe-Hellman Key exchange
+Diﬃe-Hellman Key exchange - Overview/one.sup
+Proposed in 1976 by Whitﬁeld Diﬃe and Martin Hellman
+Widely used, e.g. in Secure Shell (SSH), Transport Layer security (TLS),
+Internet Protocol Security (IPSec)
+Used to establish a shared key, not usually for encryption
+/one.supUnderstanding Cryptography by Christof Paar and Jan Pelzl
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 12/16
+Diﬃe-Hellman Key exchange
+Diﬃe-Hellman Key Exchange
+Discrete Logarithm problem:
+Given integers𝑔,𝑝,𝑔𝑘 𝑚𝑜𝑑 𝑝, ﬁnd𝑘
+=) Very diﬃcult to solve
+Diﬃe-Hellman Key Echange setup:
+Choose a large prime𝑝 and a (integer) generator𝑔
+8𝑥2f 1  2     𝑝   1g,9𝑛 : 𝑥 𝑔𝑛„𝑚𝑜𝑑 𝑝”
+𝑔,𝑝 are public
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 13/16
+Diﬃe-Hellman Key exchange
+Diﬃe-Hellman Key Exchange(DHKE)
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 14/16
+Diﬃe-Hellman Key exchange
+DHKE - Man-in-Middle Attack
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 15/16
+Application of Public Key cryptography
+Conﬁdentiality:
+use key pairs to encrypt data
+hybrid cryptosystem
+Integrity: Digital signature
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 16, 2024 16/16

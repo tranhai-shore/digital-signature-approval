@@ -1,0 +1,170 @@
+ICT Course: Introduction to Cryptography
+Nguyen Minh Huong
+ICT Department, USTH
+December 25, 2024
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 1/21
+Outline
+Session 8: Message Authentication Codes and Key
+Establishment
+1 Message Authentication Codes (MACs)
+Overview
+MACs from Hash functions
+MACs from hash functions - HMAC
+MACs from Block ciphers
+2 Key Establishment
+Introduction
+The key distribution problem
+Key Establishment using Symmetric Key Distribution
+Key Distribution Center
+Kerberos
+Key Establishment using Asymmetric Key Distribution
+Ceriﬁcates
+Public Key Infrastructure
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 2/21
+Message Authentication Codes (MACs) Overview
+Message Authentication Codes (MACs) - Overview
+Properties:
+Cryptographic checksum or keyed hash function
+Using symmetric-key scheme (much faster than DS)
+Provides:
+Message integrity
+Message authentication
+no non-repudiation
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 3/21
+Message Authentication Codes (MACs) MACs from Hash functions
+MACs from Hash functions
+Overview:
+Use hash function, e.g, SHA-1 as a building block to construct MAC
+Basic idea: key is hashed together with the message, e.g, HMAC
+Two ways of construction:
+secret preﬁx MAC:𝑚 =𝑀𝐴𝐶𝑘„𝑥” =ℎ„𝑘jj𝑥”
+secret suﬃx MAC:𝑚 =𝑀𝐴𝐶𝑘„𝑥” =ℎ„𝑥jj𝑘”
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 4/21
+Message Authentication Codes (MACs) MACs from Hash functions
+MACs from hash functions- 2 construction ways
+Secret Preﬁx MACs:
+Without knowing the key, attacker can generate a valid MAC by adding an
+additional block
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 5/21
+Message Authentication Codes (MACs) MACs from Hash functions
+Secret Suﬃx MAC
+If attacker can ﬁnd message𝑥0 such thatℎ„𝑥” =ℎ„𝑥0”,
+𝑚 =ℎ„𝑥jj𝑘” =ℎ„𝑥0jj𝑘” can be found
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 6/21
+Message Authentication Codes (MACs) MACs from Hash functions
+HMAC
+Proposed by Mihir Bellare, Ran Canetti and Hugo Krawczyk in 1996
+Widely used
+Scheme: inner hash and outer hash
+𝑘‚ =„𝑘jj 0   0”: expended key (b
+bits)
+ipad = (00110110,00110110, ...,
+00110110)
+𝑥𝑖: message blocks
+opad = (01011100, 01011100, ...,
+01011100)
+𝐻𝑀𝐴𝐶 𝑘„𝑥” =?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 7/21
+Message Authentication Codes (MACs) MACs from Block ciphers
+MACs from Block ciphers
+Using block ciphers to construct MACs
+The most popular approach in practice: a block cipher in CBC mode
+(CBC-MAC)
+Principle of CBC-MAC:
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 8/21
+Key Establishment Introduction
+Key Establishment - Introduction
+Key Establishment: deals with establishing a shared secret between two
+or more parties.
+Key Establishment methods:
+Key transport: 1 party generates and distributes a secret key
+Key Agreement: parties jointly generate a secret key (Ideally, no single
+party can control what the key value will be)
+Identiﬁcation of parties is the most important concern
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 9/21
+Key Establishment Introduction
+Key Establishment- Introduction
+Key Freshness
+Key Derivation
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 10/21
+Key Establishment The key distribution problem
+The𝑛2 key distribution prolem
+Problem:
+Each pair of users needs secured channel
+n users will need:𝑛„𝑛  1”  𝑛2 keys (𝑛 „𝑛  1” 2 if symmetric keys are
+used)
+A problem for large networks
+!Key Distribution?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 11/21
+Key Establishment Key Establishment using Symmetric Key Distribution
+Symmetric Key Distribution
+Key Distribution Center
+Kerberos Protocol
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 12/21
+Key Establishment Key Establishment using Symmetric Key Distribution
+Key Distribution Center (KDC)
+KDC:
+is a server trusted by all users
+shares a secret key, namely Key Encryption Key (KEK) with each user
+KEK is used to securely transmit secret session keys to users
+Scheme:
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 13/21
+Key Establishment Key Establishment using Symmetric Key Distribution
+KDC - cont
+Advantages:
+only n KEKs are maintained long-term
+new user needs to establish only KEK with KDC
+Attacks:
+Replay attack
+Key conﬁrmation attack
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 14/21
+Key Establishment Key Establishment using Symmetric Key Distribution
+Kerberos Protocol
+Provides:
+user authentication
+Key distribution protocol!key conﬁrmation
+Timeliness:
+lifetime of the session key:𝑇
+Time stamp to assure message is recent and not replay attack:𝑇𝑆
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 15/21
+Key Establishment Key Establishment using Symmetric Key Distribution
+Kerberos Protocol
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 16/21
+Key Establishment Key Establishment using Asymmetric Key Distribution
+Assymetric Key Distribution
+Problem:
+DHKE does not provide authenticated key
+Man-in-the-middle attack against DHKE:
+)Need authentication for the key to assure Alice and Bob to know the key is
+only from each other)Certiﬁcate:„𝑘𝑝𝑢𝑏 𝐴 𝐼𝐷 𝐴”
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 17/21
+Key Establishment Key Establishment using Asymmetric Key Distribution
+Example
+We reconsider the Diﬃe–Hellman key exchange protocol. Assume now that
+Oscar runs an active man-in-the-middle attack against the key exchange. For
+the Diﬃe–Hellman key exchange, use the parameters
+𝑝 = 467 𝛼 = 2 𝑎𝑛𝑑𝑎 = 228 𝑏 = 57
+for Alice and Bob, respectively.
+Oscar uses the value𝑜 = 16. Compute the key pairs𝑘𝐴𝑂 and𝑘𝐵𝑂
+(i) the way Oscar computes them, and
+(ii) the way Alice and Bob compute them.
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 18/21
+Key Establishment Key Establishment using Asymmetric Key Distribution
+Ceriﬁcates
+Certiﬁcates should bind the identity of a user to their public key
+Applying cryptographic mechanism
+𝐶𝑒𝑟𝑡𝐴 =»„𝑘𝑝𝑢𝑏 𝐴 𝐼𝐷 𝐴” 𝑠𝑖𝑔 𝑘 𝑝𝑟„𝑘𝑝𝑢𝑏 𝐴 𝐼𝐷 𝐴”…
+Certiﬁcates are provided by trusted third party: Certiﬁcation Authority
+(CA):
+Certiﬁcate Generation with user-provided keys: users ask CA to sign
+Certiﬁcate Generation with CA-provided keys: CA generates keys
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 19/21
+Key Establishment Key Establishment using Asymmetric Key Distribution
+Certiﬁcation Generation
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 20/21
+Key Establishment Key Establishment using Asymmetric Key Distribution
+Public-Key Infrastructure
+Certiﬁcate
+CA, chain of CAs
+Certiﬁcate Revocation Lists
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 25, 2024 21/21

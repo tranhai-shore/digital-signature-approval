@@ -1,0 +1,144 @@
+ICT Course: Introduction to Cryptography
+Nguyen Minh Huong
+ICT Department, USTH
+December 2, 2024
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 1 / 15
+Outline
+Session 2: Introduction to Cryptography - Symmetric
+Cryptography
+1 Classification of the field of Cryptology
+2 Basics of Symmetric Cryptology
+3 Cryptanalysis
+4 Historical cipher system
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 2 / 15
+Classification of the field of Cryptology
+Classification of the field of Cryptology
+Cryptography
+Symmetric Ciphers Asymmetric Ciphers Related Protocols
+Cryptanalysis
+Cryptology
+Stream 
+Ciphers
+Block 
+Ciphers
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 3 / 15
+Basics of Symmetric Cryptology
+Basics of Symmetric Cryptology
+Alice
+(good)
+Bob
+(good)
+Trudy
+(bad)
+Unsecured channelx
+y
+xEncryption
+e()
+Decryption
+d()
+y y
+Key generator Secured Channel
+K K
+x is called the plaintext
+y is called the ciphertext
+K is called the key
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 4 / 15
+Basics of Symmetric Cryptology
+Encryption: 𝑦 = 𝑒𝐾(𝑥)
+Decryption: 𝑥 = 𝑑𝐾(𝑦)
+If same keys are used for encryption and decryption:
+𝑑𝐾(𝑦) = 𝑑𝐾(𝑒𝐾(𝑥)) = 𝑥
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 5 / 15
+Cryptanalysis
+Cryptanalysis
+Why we need Cryptanalysis?
+The only way to assure a cipher is secure is to try and to break it (and
+fail!)
+Kerchhoff’s principle
+A cryptosystem should be secure even if the attacker knows all details about
+the system, with the exception of the secret key. In particular, the system
+should be secure when the attacker knows the encryption and decryption
+algorithms.
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 6 / 15
+Cryptanalysis
+Cryptanalysis Classification
+Classical Cryptanalysis
+Mathematical 
+Analysis
+Brute-Force 
+Attack
+Implementataion Attacks
+Cryptanalysis
+Social Engineering
+Classical Cryptanalysis : recovering x or k from y
+Implementation Attacks : try to extract a secret key from side-channel
+analysis, e.g., power measurement, electromagnetic radiation, etc.
+Social engineering : obtain a secret key by involving humans, e.g., trick
+a user into giving her password
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 7 / 15
+
+Cryptanalysis
+Brute-Force Attack (Exhaustive Key Search) against
+Symmetric Ciphers
+Requires at least 1 plaintext-ciphertext pair(𝑥0, 𝑦0)
+Check all possible keys K until: 𝑑𝐾(𝑦0) = 𝑥0
+How many keys do we need?
+Key length Key space Time for all keys searching
+64 bits 264 few hours or days
+128 bits 2128 decades without quantum computer
+256 bits 2256 decades with quantum computer
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 8 / 15
+
+Cryptanalysis
+Substitution cipher
+Historical cipher
+Example for understanding Brute-force and analytical attacks
+Encrypts letter rather than bits
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 9 / 15
+Cryptanalysis
+Example
+Ciphertext:
+Brute-forte Attack?
+Analytical attack?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 10 / 15
+Cryptanalysis
+Example
+Brute-forte attack: 2 40 per seconds− > How much time to break the
+code?
+Analytical: frequency counts
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 11 / 15
+Historical cipher system
+Historical cipher system
+1 Shift (Ceasar) Cipher
+2 Affine Cipher
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 12 / 15
+Historical cipher system
+Shift (Ceasar) Cipher - Example
+plaintext = ictlab
+ciphertext = lfwode
+What is the rule?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 13 / 15
+Historical cipher system
+Shift Cipher - Description
+Let 𝑘, 𝑥, 𝑦 ∈ 0, 1, ..., 25
+Encryption: 𝑦 = 𝑒𝑘(𝑥)≡( 𝑥+ 𝑘) mod 26
+Decryption: 𝑥 = 𝑑𝑘(𝑥)≡( 𝑦− 𝑘) mod 26
+Question:
+Keyspace = ?
+Is it secure? (Any attack is possible?)
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 14 / 15
+Historical cipher system
+Affine Cipher
+A key is consisted of two parts: 𝑘 =(𝑎, 𝑏)
+Let 𝑘, 𝑥, 𝑦 ∈ 0, 1, ..., 25
+Encryption: 𝑦 = 𝑒𝑘(𝑥)≡( 𝑎.𝑥+ 𝑏) mod 26
+Decryption: 𝑥 = 𝑑𝑘(𝑥)≡( 𝑎−1.(𝑦− 𝑏)) mod 26
+gcd(a,26)=1, then 𝑎 ={1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25}
+Keyspace =? Is it secure?
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 15 / 15
+Historical cipher system
+Your cipher?
+Choose a secret number, convert it to binary.
+XOR your number with(10110)2 and share it with us.
+Nguyen Minh Huong (ICT Department, USTH) ICT Course: Introduction to Cryptography December 2, 2024 16 / 15
+
