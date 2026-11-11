@@ -314,16 +314,23 @@ The window provides four tabs:
 
 Key generation, hashing, signing and verification run on a worker thread so the window remains responsive with large documents. Every completed operation is written to the activity log.
 
-### Optional standalone executable
+### Standalone Windows executable
 
-PyInstaller is not a project dependency, but it can bundle the Tkinter application for a machine without Python:
+A prebuilt single-file executable is attached to the [v1.0.0 release](https://github.com/tranhai-shore/digital-signature-approval/releases/tag/v1.0.0). It runs without a Python installation:
+
+```text
+DSIG.exe    Windows x64, one-file windowed build, 16.2 MiB
+SHA-256: AEF296E116A7423F3850D88DFB2961D7F77FBF03F76B94B9333B8EF1F4297BD9
+```
+
+To rebuild it locally, PyInstaller is required but is not a project dependency:
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --clean --windowed --name DSIG --paths . src/gui/__main__.py
+pyinstaller --noconfirm --clean --onefile --windowed --name DSIG --paths . src/gui/__main__.py
 ```
 
-The result is `dist/DSIG/DSIG.exe` on Windows. Add `--onefile` for a single executable. PyInstaller must run on the target operating system; a Windows build does not run on Linux or macOS.
+The result is `dist/DSIG.exe`. PyInstaller must run on the target operating system; a Windows build does not run on Linux or macOS.
 
 ## Library API
 
